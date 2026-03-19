@@ -299,6 +299,10 @@ class TestB2:
         results = _analyze("def greet(name='World'):\n    print(name)\n")
         assert _has(results, class_name="Function with Default Arguments", level="B2")
 
+    def test_dict_of_dict_with_list(self):
+        results = _analyze('config = {"db": {"hosts": [1, 2, 3]}}\n')
+        assert _has(results, class_name="Dict of Dict with List", level="B2")
+
 
 # ---------------------------------------------------------------------------
 # C1 – Advanced
@@ -349,6 +353,22 @@ class TestC1:
 
     def test_pickle_module(self):
         results = _analyze("import pickle\n")
+        assert _has(results, class_name="Standard Library Module Import", level="C1")
+
+    def test_struct_module(self):
+        results = _analyze("import struct\n")
+        assert _has(results, class_name="Standard Library Module Import", level="C1")
+
+    def test_shelve_module(self):
+        results = _analyze("import shelve\n")
+        assert _has(results, class_name="Standard Library Module Import", level="C1")
+
+    def test_dbm_module(self):
+        results = _analyze("import dbm\n")
+        assert _has(results, class_name="Standard Library Module Import", level="C1")
+
+    def test_importlib_module(self):
+        results = _analyze("import importlib\n")
         assert _has(results, class_name="Standard Library Module Import", level="C1")
 
 
