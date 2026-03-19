@@ -1,4 +1,4 @@
-# pycefrl-keyword
+# pycefrl-keyword-searching
 
 A Python tool that identifies [CEFR-inspired](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages) proficiency levels in Python 3 source code using **regular expression** pattern matching — rather than Abstract Syntax Tree (AST) analysis as used in the original [PyCerf](https://github.com/raux/pycefrl) project.
 
