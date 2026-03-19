@@ -9,6 +9,7 @@ CEFR proficiency level.
 
 import csv
 import json
+import logging
 import os
 import re
 
@@ -20,7 +21,7 @@ from .patterns import compiled_patterns
 # ---------------------------------------------------------------------------
 
 def _line_info(content: str, start: int, end: int) -> tuple[int, int, int]:
-    """Return ``(start_line, end_line, col_offset)`` for byte offsets in *content*.
+    """Return ``(start_line, end_line, col_offset)`` for character indices in *content*.
 
     Line numbers are 1-based; column offset is 0-based (characters from the
     start of the line).
@@ -36,13 +37,20 @@ def _line_info(content: str, start: int, end: int) -> tuple[int, int, int]:
 # Public API
 # ---------------------------------------------------------------------------
 
-def analyze_file(file_path: str, repo_name: str) -> list[dict]:
+def analyze_file(
+    file_path: str,
+    repo_name: str,
+    file_label: str | None = None,
+) -> list[dict]:
     """Analyze a single Python file and return a list of match records.
 
     Each record is a :class:`dict` with the following keys:
 
     * ``repo``         – repository (or directory) name
-    * ``file``         – base filename
+    * ``file``         – file label stored in results; defaults to the
+                         basename of *file_path* but can be overridden via
+                         *file_label* (e.g., to store a relative path when
+                         called from :func:`analyze_directory`)
     * ``class``        – human-readable description of the matched construct
     * ``start_line``   – 1-based line number where the match starts
     * ``end_line``     – 1-based line number where the match ends
@@ -55,14 +63,18 @@ def analyze_file(file_path: str, repo_name: str) -> list[dict]:
         Absolute or relative path to a ``.py`` file.
     repo_name:
         Label used for the ``repo`` field in every returned record.
+    file_label:
+        Optional override for the ``file`` field.  When *None* (default),
+        ``os.path.basename(file_path)`` is used.
     """
     results: list[dict] = []
-    file_name = os.path.basename(file_path)
+    file_name = file_label if file_label is not None else os.path.basename(file_path)
 
     try:
         with open(file_path, encoding="utf-8", errors="replace") as fh:
             content = fh.read()
-    except OSError:
+    except OSError as exc:
+        logging.warning("Cannot read %s: %s", file_path, exc)
         return results
 
     for regex, class_name, level in compiled_patterns():
@@ -97,7 +109,9 @@ def analyze_directory(dir_path: str) -> list[dict]:
     -------
     list[dict]
         Concatenated results from :func:`analyze_file` for every Python file
-        found under *dir_path*.
+        found under *dir_path*.  The ``file`` field in each record is a path
+        relative to *dir_path*, so files with the same basename but in
+        different sub-directories remain distinguishable.
     """
     repo_name = os.path.basename(os.path.abspath(dir_path))
     all_results: list[dict] = []
@@ -106,11 +120,11 @@ def analyze_directory(dir_path: str) -> list[dict]:
         for file_name in sorted(files):
             if file_name.endswith(".py"):
                 file_path = os.path.join(root, file_name)
-                file_results = analyze_file(file_path, repo_name)
+                rel_path = os.path.relpath(file_path, dir_path)
+                file_results = analyze_file(file_path, repo_name, file_label=rel_path)
                 all_results.extend(file_results)
-                print(
-                    f"  Analyzed {os.path.relpath(file_path, dir_path)}"
-                    f" → {len(file_results)} match(es)"
+                logging.debug(
+                    "Analyzed %s → %d match(es)", rel_path, len(file_results)
                 )
 
     return all_results

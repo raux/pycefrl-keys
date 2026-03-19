@@ -32,8 +32,9 @@ _A1 = [
     ),
     # Simple if statement (not __name__ guard, not ternary context)
     Pattern(r"^\s*if\s+(?!__name__\s*==)", "Simple If Statement", "A1"),
-    # Simple list literal (no nested list/dict/comprehension inside)
-    Pattern(r"\[(?:[^\[\]{}\n]*)\](?!\s*for\b)", "Simple List", "A1"),
+    # Simple list literal (no nested list/dict/comprehension inside).
+    # Negative lookbehind prevents matching subscripts like a[0] or obj[key].
+    Pattern(r"(?<![A-Za-z0-9_\]\)])\[(?:[^\[\]{}\n]*)\](?!\s*for\b)", "Simple List", "A1"),
     # Simple tuple literal (contains at least one comma)
     Pattern(
         r"(?<!\w)\((?:[^()\[\]{}\n]*,)+[^()\[\]{}\n]*\)(?!\s*for\b)",
@@ -94,8 +95,9 @@ _A2 = [
     ),
     # Simple dict literal  (no nested dict/comprehension)
     Pattern(r"\{(?:[^{}\n]*:[^{}\n]*)\}(?!\s*for\b)", "Simple Dictionary", "A2"),
-    # Attribute access on self  (self.attr — not dunder)
-    Pattern(r"\bself\.[A-Za-z_]\w*\b(?!__)", "Attribute Access (self)", "A2"),
+    # Attribute access on self  (self.attr — not dunder; lookahead is placed
+    # immediately after the dot so self.__dict__ / self.__class__ are excluded)
+    Pattern(r"\bself\.(?!__)[A-Za-z_]\w*\b", "Attribute Access (self)", "A2"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -268,8 +270,9 @@ _C2 = [
     Pattern(r"^\s*def\s+__new__\s*\(", "__new__ Method", "C2"),
     # __metaclass__ class variable (Python 2 style, still detectable)
     Pattern(r"^\s*__metaclass__\s*=", "__metaclass__ Assignment", "C2"),
-    # Private attribute access via self  (self.__name)
-    Pattern(r"\bself\.__[A-Za-z_]\w*\b", "Private Class Attribute", "C2"),
+    # Private (name-mangled) attribute access via self  (self.__name).
+    # A negative lookbehind on __ ensures dunders like self.__dict__ are excluded.
+    Pattern(r"\bself\.__[A-Za-z_]\w*(?<!__)\b", "Private Class Attribute", "C2"),
     # List comprehension with conditional filter  ([expr for var in iter if cond])
     Pattern(
         r"\[[^\[\]]+\s+for\s+[A-Za-z_]\w*\s+in\s+[^\[\]]+\s+if\s+[^\[\]]+\]",

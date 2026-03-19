@@ -13,8 +13,10 @@ Analyze a single Python file::
     python pycefrl_keyword_cli.py file <path>
 
 Results are written to ``data.json`` and ``data.csv`` in the current directory.
+Pass ``-v`` / ``--verbose`` to see per-file progress on stderr.
 """
 
+import logging
 import os
 import sys
 
@@ -27,11 +29,22 @@ def _usage() -> None:
 
 
 def main() -> None:
-    if len(sys.argv) < 3:
+    args = sys.argv[1:]
+
+    # Strip optional verbose flag
+    verbose = False
+    if "-v" in args or "--verbose" in args:
+        verbose = True
+        args = [a for a in args if a not in ("-v", "--verbose")]
+
+    if len(args) < 2:
         _usage()
 
-    type_option = sys.argv[1].lower()
-    option = sys.argv[2]
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG, format="  %(message)s")
+
+    type_option = args[0].lower()
+    option = args[1]
 
     if type_option == "directory":
         if not os.path.isdir(option):

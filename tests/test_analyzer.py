@@ -90,6 +90,11 @@ class TestA1:
         results = _analyze("x = [1, 2, 3]\n")
         assert _has(results, class_name="Simple List", level="A1")
 
+    def test_simple_list_no_subscript_false_positive(self):
+        """Subscript/index access should NOT be classified as Simple List."""
+        results = _analyze("y = items[0]\n")
+        assert not _has(results, class_name="Simple List", level="A1")
+
     def test_simple_tuple(self):
         results = _analyze("t = (1, 2, 3)\n")
         assert _has(results, class_name="Simple Tuple", level="A1")
@@ -149,6 +154,14 @@ class TestA2:
             "class Foo:\n    def __init__(self):\n        self.x = 1\n"
         )
         assert _has(results, class_name="Attribute Access (self)", level="A2")
+
+    def test_self_dunder_not_a2(self):
+        """self.__dict__ and self.__class__ must NOT be classified as A2 Attribute Access."""
+        for snippet in ("print(self.__dict__)\n", "print(self.__class__)\n"):
+            results = _analyze(snippet)
+            assert not _has(results, class_name="Attribute Access (self)", level="A2"), (
+                f"self dunder wrongly classified as A2 for: {snippet!r}"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -368,6 +381,14 @@ class TestC2:
         )
         assert _has(results, class_name="Private Class Attribute", level="C2")
 
+    def test_dunder_attribute_not_private_c2(self):
+        """self.__dict__ / self.__class__ are dunders, not name-mangled private attrs."""
+        for snippet in ("x = self.__dict__\n", "x = self.__class__\n"):
+            results = _analyze(snippet)
+            assert not _has(results, class_name="Private Class Attribute", level="C2"), (
+                f"Dunder wrongly classified as Private Class Attribute for: {snippet!r}"
+            )
+
     def test_list_comp_with_if(self):
         results = _analyze("evens = [x for x in range(20) if x % 2 == 0]\n")
         assert _has(results, class_name="List Comprehension with If", level="C2")
@@ -389,7 +410,7 @@ class TestC2:
 
 class TestIntegration:
     def test_analyze_directory(self, tmp_path):
-        """analyze_directory returns results for all .py files in a tree."""
+        """analyze_directory uses relative paths so same-basename files are distinct."""
         sub = tmp_path / "sub"
         sub.mkdir()
         (tmp_path / "a.py").write_text("print('hello')\n")
@@ -397,8 +418,11 @@ class TestIntegration:
 
         results = analyze_directory(str(tmp_path))
         files_found = {r["file"] for r in results}
+        # Root-level file stored as bare name
         assert "a.py" in files_found
-        assert "b.py" in files_found
+        # Sub-directory file stored as a relative path (OS-appropriate separator)
+        expected_sub = os.path.join("sub", "b.py")
+        assert expected_sub in files_found
 
     def test_save_results(self, tmp_path):
         """save_results produces valid data.json and data.csv."""
