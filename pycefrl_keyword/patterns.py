@@ -89,7 +89,7 @@ _A2 = [
     ),
     # Nested tuple  ((…(…,…)…))
     Pattern(
-        r"\((?:[^()]*)\((?:[^()]*,)[^()]*\)(?:[^()]*)\)",
+        r"\((?:[^()]*\([^()]*\)[^()]*)+\)",
         "Nested Tuple",
         "A2",
     ),
@@ -128,7 +128,7 @@ _B1 = [
     ),
     # Function with keyword-only arguments  (*, param)
     Pattern(
-        r"^\s*def\s+[A-Za-z_]\w*\s*\([^)]*,\s*\*\s*,",
+        r"^\s*def\s+[A-Za-z_]\w*\s*\([^)]*\*,\s*[A-Za-z_][^)]*\)\s*:",
         "Function with Keyword-Only Arguments",
         "B1",
     ),

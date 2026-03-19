@@ -141,9 +141,17 @@ class TestA2:
         results = _analyze("pairs = [(1, 2)]\nfor x, y in pairs:\n    print(x, y)\n")
         assert _has(results, class_name="For Loop with Tuple Unpacking", level="A2")
 
+    def test_for_loop_over_tuple(self):
+        results = _analyze("for val in (1, 2, 3):\n    print(val)\n")
+        assert _has(results, class_name="For Loop over Tuple", level="A2")
+
     def test_nested_list(self):
         results = _analyze("matrix = [[1, 2], [3, 4]]\n")
         assert _has(results, class_name="Nested List", level="A2")
+
+    def test_nested_tuple(self):
+        results = _analyze("coords = ((1, 2), (3, 4))\n")
+        assert _has(results, class_name="Nested Tuple", level="A2")
 
     def test_simple_dict(self):
         results = _analyze('d = {"key": "value"}\n')
@@ -200,6 +208,10 @@ class TestB1:
     def test_function_with_kwargs(self):
         results = _analyze("def func(**kwargs):\n    pass\n")
         assert _has(results, class_name="Function with **kwargs", level="B1")
+
+    def test_function_with_keyword_only_arguments(self):
+        results = _analyze("def func(*, flag=True):\n    return flag\n")
+        assert _has(results, class_name="Function with Keyword-Only Arguments", level="B1")
 
     def test_simple_class(self):
         results = _analyze("class Dog:\n    pass\n")
@@ -374,6 +386,10 @@ class TestC2:
     def test_new_method(self):
         results = _analyze("class Foo:\n    def __new__(cls):\n        pass\n")
         assert _has(results, class_name="__new__ Method", level="C2")
+
+    def test_py2_metaclass_assignment(self):
+        results = _analyze("class Foo:\n    __metaclass__ = Meta\n")
+        assert _has(results, class_name="__metaclass__ Assignment", level="C2")
 
     def test_private_attribute(self):
         results = _analyze(
