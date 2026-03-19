@@ -1,0 +1,5 @@
+# Runtime dependencies – pycefrl-keyword uses only the Python standard library.
+# No third-party packages are required to run the analyzer.
+
+# Development / testing dependencies
+pytest>=7.0.0
