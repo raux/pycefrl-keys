@@ -29,6 +29,9 @@ data.csv
 *.swp
 *.swo
 
+# Streamlit
+.streamlit/secrets.toml
+
 # OS
 .DS_Store
 Thumbs.db

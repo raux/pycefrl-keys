@@ -76,6 +76,51 @@ json_path, csv_path = save_results(results, output_dir=".")
 # }
 ```
 
+## Web Interface
+
+A browser-based dashboard (built with [Streamlit](https://streamlit.io/)) lets
+you analyse Python code and explore the results interactively — similar to the
+web interface available in the original
+[PyCerf](https://github.com/raux/pycefrl) project.
+
+### Quick start
+
+```bash
+# Install the web dependencies
+pip install -r requirements.txt
+
+# Launch the dashboard
+python -m streamlit run app.py
+```
+
+Then open <http://localhost:8501> in your browser.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| 📁 Local Directory | Analyse all Python files under any local path |
+| 🔗 GitHub Repository | Clone and analyse a public GitHub repository by URL |
+| 📊 Level Metrics | Per-level (A1 – C2) match counts displayed as metric cards |
+| 📈 Bar Chart | Elements-per-level distribution |
+| 🫧 Bubble Chart | Category vs Level (bubble size = frequency) |
+| 🗺️ File Heatmap | File vs Level count heatmap |
+| 🌳 Element Treemap | Drill-down view: Level → Category → Element |
+| 📋 Detailed Table | Full results table with Class, Level, File, and Category columns |
+| 📥 Downloads | Export results as JSON or CSV |
+| 💻 System Stats | Live CPU and RAM usage in the sidebar |
+
+### Screenshot
+
+![PyCEFRL Keywords Web Interface](https://github.com/user-attachments/assets/0d7bc6c7-7d4b-4718-b92b-f3c77d5c3a31)
+
+### Deployment
+
+The app can be deployed to any platform that supports Streamlit, including:
+
+- [Streamlit Community Cloud](https://streamlit.io/cloud)
+- Docker / Render / Railway / Heroku
+
 ## Running the tests
 
 ```bash

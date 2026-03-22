@@ -1,5 +1,9 @@
-# Runtime dependencies – pycefrl-keyword uses only the Python standard library.
-# No third-party packages are required to run the analyzer.
+# Runtime dependencies – pycefrl-keyword uses only the Python standard library
+# for the CLI.  The web interface (app.py) requires the packages below.
+streamlit>=1.32.0
+pandas>=2.2.0
+plotly>=5.18.0
+psutil>=5.9.8
 
 # Development / testing dependencies
 pytest>=7.0.0
