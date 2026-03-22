@@ -118,15 +118,30 @@ def results_to_dataframe(results: list[dict]) -> pd.DataFrame:
     return df
 
 
+_GITHUB_URL_RE = re.compile(
+    r"^https?://github\.com/([\w.-]+)/([\w.-]+?)(\.git)?/?$"
+)
+
+# Fixed output directory for analysis results — reused across runs so that
+# temporary directories do not accumulate.
+_OUTPUT_DIR = os.path.join(tempfile.gettempdir(), "pycefrl_keyword_output")
+
+
 def clone_github_repo(url: str) -> str | None:
     """Clone a GitHub repository into a temporary directory.
 
-    Returns the path to the cloned directory, or *None* on failure.
+    The *url* is validated against the GitHub URL pattern before being
+    passed to ``git clone``.  Returns the path to the cloned directory,
+    or *None* on failure.
     """
+    if not _GITHUB_URL_RE.match(url.rstrip("/").rstrip(".git").rstrip("/")):
+        st.error("Invalid GitHub repository URL.")
+        return None
+
     tmp_dir = tempfile.mkdtemp(prefix="pycefrl_")
     try:
         subprocess.run(
-            ["git", "clone", "--depth", "1", url, tmp_dir],
+            ["git", "clone", "--depth", "1", "--", url, tmp_dir],
             check=True,
             capture_output=True,
             text=True,
@@ -358,7 +373,7 @@ if mode == "Local Directory":
             with st.spinner("Analysing…"):
                 results = analyze_directory(path)
             st.success(f"✅ Analysis complete — {len(results)} pattern match(es) found.")
-            display_results(results, output_dir=tempfile.mkdtemp(prefix="pycefrl_out_"))
+            display_results(results, output_dir=_OUTPUT_DIR)
         else:
             st.error("Please enter a valid directory path.")
 
@@ -372,8 +387,7 @@ elif mode == "GitHub Repository":
 
     is_valid = False
     if url:
-        github_pattern = r"^https?://github\.com/([\w.-]+)/([\w.-]+?)(\.git)?/?$"
-        if re.match(github_pattern, url.strip().rstrip("/")):
+        if _GITHUB_URL_RE.match(url.strip().rstrip("/")):
             is_valid = True
             st.success("✓ Valid GitHub repository URL")
         else:
@@ -399,7 +413,7 @@ elif mode == "GitHub Repository":
                         f"✅ Analysis complete — {len(results)} pattern match(es) found."
                     )
                     display_results(
-                        results, output_dir=tempfile.mkdtemp(prefix="pycefrl_out_")
+                        results, output_dir=_OUTPUT_DIR
                     )
                 finally:
                     shutil.rmtree(repo_dir, ignore_errors=True)
